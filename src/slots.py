@@ -5,11 +5,9 @@ Prevents ungrounded or drifting numbers from entering generative context.
 
 from __future__ import annotations
 
-import re
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, List, Tuple
 
-from .models import SourceSpan, SpanGroundedSlot, ExtractionMethod
+from .models import SpanGroundedSlot
 
 
 class SlotGroundingError(Exception):

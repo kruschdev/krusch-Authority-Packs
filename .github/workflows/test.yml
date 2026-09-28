@@ -1,0 +1,54 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Run Linters & Code Quality Gate
+      run: |
+        ruff check src/ tests/
+
+    - name: Homelab Path & Secret Hygiene Guard
+      run: |
+        echo "Verifying no absolute homelab machine paths exist in source, docs, tests, packs, or markdown..."
+        ! grep -rn --exclude-dir=__pycache__ --exclude-dir=.git "/home/krusch" src/ docs/ tests/ packs/ *.md
+
+    - name: Air-Gap Vendor Independence Guard
+      run: |
+        echo "Verifying zero external cloud vendor references in package..."
+        ! grep -rn -i -E "google|gemini|openai|anthropic" src/
+
+    - name: Validate All Authority Packs
+      run: |
+        python -m src.validator validate packs/legal/*.yaml packs/accounting/*.yaml packs/commercial/*.yaml
+
+    - name: Run 180-Query Binder Conformance Suite Benchmark
+      run: |
+        python -m src.eval
+
+    - name: Run Automated Test Suite
+      run: |
+        python -m pytest tests/ -v

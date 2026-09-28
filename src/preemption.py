@@ -9,8 +9,8 @@ Evaluates regulatory supremacy:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple
+from dataclasses import dataclass
+from typing import Dict, Optional, Set, Tuple
 
 from .models import PreemptionEdge, PreemptionOperator
 
