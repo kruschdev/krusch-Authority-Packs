@@ -1,22 +1,54 @@
-# 📦 krusch-RAG-Packs
+# 📦 Authority Packs (`krusch-RAG-Packs`)
 
-> **Sovereign Domain Scoping vs. Vector Bleed in High-Assurance AI**  
-> An open, version-controlled architecture, reference library, and evaluation harness for domain-scoped, deterministic authority packs.
+> **Certified Rulebooks for Enterprise AI — by Jurisdiction and Effective Date**  
+> An open architecture, specification, and evaluation harness for governed knowledge modules in high-assurance legal, financial, and enterprise workflows.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Benchmark: GC-Grade](https://img.shields.io/badge/Benchmark_Eval-n%3D180%20(5%20Classes)-gold.svg)](https://krusch.dev/articles/what-are-rag-packs.html)
-[![Wrong-Law Blend: 0.0%](https://img.shields.io/badge/Wrong--Law_Blend-0.0%25-brightgreen.svg)](https://krusch.dev/articles/what-are-rag-packs.html)
-[![Token Footprint: Tiered](https://img.shields.io/badge/Context_Tiering-L0%20%7C%20L1%20%7C%20L2-cyan.svg)](https://krusch.dev/articles/what-are-rag-packs.html)
+[![Benchmark: GC-Grade](https://img.shields.io/badge/Benchmark_Eval-n%3D180%20(5%20Classes)-gold.svg)](https://krusch.dev/articles/authority-packs.html)
+[![Wrong-Law Blend: 0.0%](https://img.shields.io/badge/Wrong--Law_Blend-0.0%25-brightgreen.svg)](https://krusch.dev/articles/authority-packs.html)
+[![Product: Governed Modules](https://img.shields.io/badge/Category-Governed%20Knowledge%20Modules-cyan.svg)](https://krusch.dev/articles/authority-packs.html)
 
 ---
 
-## 🏛️ 1. The Problem in Practice: The California Municipal Trilogy
+## 💼 The Commercial Reality: Buyers Don't Buy Retrieval
 
-In regulated enterprise disciplines—such as municipal tenancy law, corporate contract review, and US GAAP accounting—**semantic similarity does not equal governing authority**. 
+In enterprise procurement and regulated industries, you do not sell "RAG." Buyers do not buy retrieval mechanisms, sliding windows, or vector similarity. **Buyers purchase a bounded, versioned rulebook the AI system is legally permitted to use.**
 
-Standard sliding-window vector retrieval (naive RAG) suffers from fatal **Vector Bleed**: high-dimensional embedding spaces cluster semantically similar language across incompatible jurisdictions, producing catastrophic hallucinations.
+### The Buyer Sentence
+> *“Your model only sees the Oakland 2024 ordinance, the numeric caps we extracted, and the statutes that override it. If the question is outside the pack, it refuses.”*
 
-Consider how California municipal tenancy codes regulate an **Owner Move-In (OMI)** eviction:
+### One-Line Positioning
+> **“We don’t search the internet for the law. We ship the pack that is the law for that city, that year.”**
+
+---
+
+## 📋 Product Line: What You Actually Invoice
+
+Internally, developers call these structures *RAG Packs* because they package knowledge for retrieval-augmented generation. But on an invoice, an RFP, or a commercial contract, the category label is **governed knowledge modules** (or **versioned authority datasets**), and the product name is an **Authority Pack**.
+
+| SKU | What the Customer Thinks They Bought | What You Deliver |
+|---|---|---|
+| **Jurisdiction Pack**<br>`(Legal Vertical)` | “LA rent / Oakland just cause / SF OMI rulebook” | YAML specification + typed slots + preemption DAG + physical PDF citation coordinates + `as_of` temporal gate. |
+| **Standards Pack**<br>`(Finance & Audit)` | “US GAAP ASC 606 revenue recognition pack” | Five-step deterministic contract checklist + numeric financing thresholds + distinctness criteria + out-of-scope refusal contract. |
+| **Playbook Pack**<br>`(Enterprise Contracts)` | “Our corporate MSA / procurement policy” | Company clauses and authorized deviation bounds joined directly against statutory floors and ceiling packs. |
+| **Pack Subscription**<br>`(Recurring SaaS)` | “Keep our AI current when the city council amends” | Continuous legislative monitoring, version bumps, amendment diffs, and updated effective-date graphs. **Sell the subscription to currency, not the static file.** |
+| **Pack Audit**<br>`(Assurance & Defense)` | “Prove this AI advice came from the gazette” | Sub-line cell bounding box report (`[x0, y0, x1, y1]`), verbatim quote matches, and automated 180-query verification matrix. |
+
+### Pitch Vocabulary Guide
+
+| Terms to Use (Procurement &amp; GC Approved) | Terms to Avoid (Why They Create Friction) |
+|---|---|
+| **Authority Pack** | *RAG Pack* — Sounds like low-level developer plumbing; buyers don't buy infrastructure. |
+| **Certified Pack / Controlled Pack** | *Knowledge Pack* — Generic vendor buzzword that every generic chatbot company claims. |
+| **Effective-Date Pack** | *Sovereign Pack* — Fine in architectural essays; confusing on enterprise procurement forms. |
+| **Scoped Rulebook** | *Deterministic AI Pack* — Overclaim; legal counsel and finance will push back on "deterministic AI". |
+| **Compliance Module** | *Hallucination-Free Pack* — Uninsurable legal liability. Never promise 0% hallucination in open text. |
+
+---
+
+## 🏛️ The Problem in Practice: The California Municipal Trilogy
+
+In California residential tenancy, state law sets default baselines, but the actual rules governing evictions, rent caps, and relocation payments are dictated by hyper-local municipal ordinances:
 
 | Regulatory Dimension | Oakland (`ca_oakland.yaml`) | San Francisco (`ca_san_francisco.yaml`) | Los Angeles (`ca_los_angeles.yaml`) |
 |---|---|---|---|
@@ -34,9 +66,9 @@ The output reads with authoritative elegance, but it is legally toxic and guaran
 
 ---
 
-## 🔬 2. Separating Determinism from Probabilistic Generation
+## 🔬 Separating Determinism from Probabilistic Generation
 
-We explicitly separate three layers of the AI stack:
+We explicitly separate three layers of the software stack:
 
 1. **Deterministic Binding (Exact):** Which pack, which enacted edition, which verified as-of date (or explicit refusal).
 2. **Deterministic Slots & Preemption Operators (Exact):** Typed constants (`33.0`, `21 days`, `3 business days`), physical source bboxes, verbatim quoted sentences, and compiled preemption graphs.
@@ -44,11 +76,11 @@ We explicitly separate three layers of the AI stack:
 
 ---
 
-## 🧭 3. Pack Selection: The Binder Subsystem
+## 🧭 Pack Selection: The Binder Subsystem (`src/binder.py`)
 
 If an agent simply picks the "nearest" pack using embedding similarity, you have not solved vector bleed—you have merely moved it from chunk retrieval to pack retrieval.
 
-`krusch-RAG-Packs` includes a deterministic **Pack Binder** (`src/binder.py`):
+`src/binder.py` enforces an explicit **Pack Binder** pipeline:
 1. **Entity Extraction:** Extracts `municipality`, `county`, `state`, `court`, `as_of_date`, and `doc_type`.
 2. **Registry Resolution:** Matches extracted entities against the pack catalog.
 3. **Ambiguity Gating:** If a query contains cross-city trap wording (e.g. an LA property analyzed with SF terminology), the binder emits `REFUSED_AMBIGUOUS` rather than guessing.
@@ -57,20 +89,20 @@ If an agent simply picks the "nearest" pack using embedding similarity, you have
 
 ---
 
-## ⏳ 4. Versioning Law Like Software: Stopping Temporal Bleed
+## ⏳ Stopping Temporal Bleed: Versioning Law Like Software
 
-Law evolves continuously. Serving advice based on outdated statutory thresholds is **Temporal Bleed**.
+Serving advice based on outdated statutory thresholds is **Temporal Bleed**.
 
-Every RAG pack enforces:
+Every Authority Pack enforces:
 * `effective_from` / `effective_to`: Temporal validity bounds.
-* `source_document_hash`: SHA-256 hash of the authoritative government gazette.
+* `source_document_hash`: Cryptographic SHA-256 hash of the authoritative government gazette.
 * `as_of_date` Query Evaluation: Historical queries (e.g. evaluating a 2022 transaction against a 2024 AB 12 pack) fail closed (`REFUSED_STALE_OR_PRE_EFFECTIVE`).
 
 ---
 
-## 🔒 5. Span-Grounded Slots & Fail-Closed Audits
+## 🔒 Span-Grounded Slots & Fail-Closed Audits (`src/slots.py`)
 
-Slots are not standalone magic numbers. Every slot in a RAG pack is anchored to:
+Slots are not standalone magic numbers. Every slot in an Authority Pack is anchored to:
 * **Physical Source Span:** `page_number`, bounding box `bbox: [x0, y0, x1, y1]`, character offsets.
 * **Verbatim Quoted Sentence:** Exact text from the enacted statute.
 * **Extraction Audit Trail:** `extraction_method` (`human_curated`, `compiler_layout`, `model_proposed_human_reviewed`), reviewer ID, and timestamp.
@@ -79,19 +111,9 @@ The runtime `SlotVerifier` audits each slot against its cited sentence. If the c
 
 ---
 
-## 📐 6. Context Tiering: Scope First, Retrieve Second
+## ⚖️ Preemption as a Compiled Graph (`src/preemption.py`)
 
-Rather than forcing an entire municipal code family into an arbitrary single token window, RAG packs organize knowledge into three tiers:
-
-* **L0 Pack Card (~150 tokens):** Metadata, coverage contracts, and preemption edges. Always present in working memory.
-* **L1 Topic Slices (~400–800 tokens):** Modular procedures (e.g. *Owner Move-In*, *Security Deposits*, *Relocation*). Hydrated only when the inquiry touches that topic.
-* **L2 Dynamic Evidence:** Specific table cells or subsections retrieved by hybrid search **inside the already-bound jurisdiction**.
-
----
-
-## ⚖️ 7. Preemption as a Compiled Graph
-
-Statutory preemption is modeled as a compiled directed graph (`src/preemption.py`) using explicit operators:
+Statutory preemption is modeled as a compiled directed graph using explicit operators:
 
 | Operator | Legal Mechanics | Example |
 |---|---|---|
@@ -102,9 +124,9 @@ Statutory preemption is modeled as a compiled directed graph (`src/preemption.py
 
 ---
 
-## 📊 8. Published Evaluation Benchmark (N = 180)
+## 📊 Published Evaluation Benchmark (N = 180)
 
-To measure the real-world performance of RAG packs against vector bleed, we benchmarked 180 standardized queries across five distinct challenge classes:
+To measure the real-world performance of Authority Packs against vector bleed, we benchmarked 180 standardized queries across five distinct challenge classes (`src/eval.py`):
 
 | Query Class | n | Description | Correct Juris. | Correct Slot | Proper Refusal | Wrong-Law Blend |
 |---|---|---|---|---|---|---|
@@ -123,9 +145,9 @@ On the identical 180-query benchmark:
 
 ---
 
-## ⏱️ 9. Curation Economics: Real Maintenance Effort
+## ⏱️ Curation Economics: Real Maintenance Effort
 
-RAG packs are not autonomous black-box scrapers. They follow a disciplined human-in-the-loop engineering pipeline:
+Authority Packs follow a disciplined human-in-the-loop engineering pipeline:
 
 1. **Layout-True Parsing:** KruschNexus extracts cell-level tables and geometric ASTs from government gazettes.
 2. **Candidate Slot Compilation:** Syntactic parsers extract candidate slots anchored to verbatim quoted sentences.
@@ -138,7 +160,7 @@ RAG packs are not autonomous black-box scrapers. They follow a disciplined human
 
 ---
 
-## 🚀 10. CLI Usage & Quickstart
+## 🚀 CLI Usage & Quickstart
 
 ### Installation
 ```bash
@@ -162,7 +184,7 @@ python3 -m src.validator info packs/legal/ca_oakland.yaml
 python3 -m src.eval
 ```
 
-### Run the Test Suite (25 Tests)
+### Run Automated Unit Tests (25 Tests)
 ```bash
 pytest -v tests/
 ```
