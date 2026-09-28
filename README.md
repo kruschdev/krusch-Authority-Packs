@@ -1,6 +1,6 @@
-# 📦 Authority Packs (`krusch-RAG-Packs`)
+# 📦 Authority Packs (`krusch-Authority-Packs`)
 
-> **Certified Rulebooks for Enterprise AI — by Jurisdiction and Effective Date**  
+> **Controlled Rulebooks for Enterprise AI — by Jurisdiction and Effective Date**  
 > An open architecture, specification, and evaluation harness for governed knowledge modules in high-assurance legal, financial, and enterprise workflows.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -124,9 +124,11 @@ Statutory preemption is modeled as a compiled directed graph using explicit oper
 
 ---
 
-## 📊 Published Evaluation Benchmark (N = 180)
+## 📊 Binder Conformance Suite: Gate Verification (N = 180)
 
-To measure the real-world performance of Authority Packs against vector bleed, we benchmarked 180 standardized queries across five distinct challenge classes (`src/eval.py`):
+Self-authored unit tests are essential regression guards, but they test code execution paths rather than gate boundary behavior under adversarial input. To measure the real-world boundary enforcement of Authority Packs against vector bleed, we benchmarked 180 standardized challenge queries across five distinct challenge classes (`src/eval.py`):
+
+*Note on evaluation methodology:* This benchmark evaluates **deterministic gate conformance**—measuring whether the Pack Binder correctly routes, bounds, extracts physical slots, or fails closed on ambiguous, cross-jurisdiction, or stale queries before any text generation occurs. It measures boundary and gate enforcement, contrasting directly with unconstrained naive cosine vector RAG.
 
 | Query Class | n | Description | Correct Juris. | Correct Slot | Proper Refusal | Wrong-Law Blend |
 |---|---|---|---|---|---|---|
@@ -152,7 +154,7 @@ Authority Packs follow a disciplined human-in-the-loop engineering pipeline:
 1. **Layout-True Parsing:** KruschNexus extracts cell-level tables and geometric ASTs from government gazettes.
 2. **Candidate Slot Compilation:** Syntactic parsers extract candidate slots anchored to verbatim quoted sentences.
 3. **Diff Against Prior Edition:** Git diff identifies modified sections and altered numerical values in new legislative supplements.
-4. **Counsel Review & Signature:** Domain counsel verifies candidate slots and signs the release with a cryptographic hash.
+4. **Dual-Sign Governance:** A pack release requires dual cryptographic sign-off before shipping: a lead extraction engineer audits physical span coordinates, and an accredited domain practitioner (e.g. active California bar member for municipal tenancy, or certified CPA for ASC 606) audits statutory slots before co-signing the SHA-256 release digest.
 
 **Engineering Cost Benchmark:**
 - Standing up a new municipal pack: **2 to 4 hours** of legal engineering time.
@@ -164,8 +166,8 @@ Authority Packs follow a disciplined human-in-the-loop engineering pipeline:
 
 ### Installation
 ```bash
-git clone https://github.com/kruschdev/krusch-RAG-Packs.git
-cd krusch-RAG-Packs
+git clone https://github.com/kruschdev/krusch-Authority-Packs.git
+cd krusch-Authority-Packs
 pip install pyyaml pytest
 ```
 

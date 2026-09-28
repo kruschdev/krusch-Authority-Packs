@@ -1,5 +1,5 @@
 """
-krusch-rag-packs: Sovereign Domain Scoping & Deterministic RAG Pack Specification.
+krusch-authority-packs: Controlled Domain Scoping & Authority Pack Specification.
 """
 
 from .validator import RagPack, RagPackValidator, ValidationError

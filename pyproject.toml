@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "krusch-rag-packs"
+name = "krusch-authority-packs"
 version = "1.0.0"
-description = "Sovereign Domain Scoping & Deterministic RAG Pack Specification, Binder, and Reference Library"
+description = "Controlled Rulebooks & Authority Packs for Enterprise AI — Specification, Binder, and Reference Library"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Kevin Ruschman", email = "kevin@krusch.dev" }]
@@ -20,4 +20,5 @@ dev = [
 ]
 
 [project.scripts]
+authority-pack = "src.validator:main"
 rag-pack = "src.validator:main"

@@ -1,5 +1,5 @@
 """
-Unit and invariant verification test suite for krusch-rag-packs.
+Unit and invariant verification test suite for krusch-authority-packs.
 """
 
 import glob

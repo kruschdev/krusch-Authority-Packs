@@ -1,5 +1,5 @@
 """
-Core data models for krusch-rag-packs.
+Core data models for krusch-authority-packs.
 Defines schemas for:
 - Temporal Authority Packs (with sunset/effective dates, source doc hashes)
 - Span-Grounded Slots (source bboxes, char spans, quoted sentences, review audits)

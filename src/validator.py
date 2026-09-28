@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Set
 try:
     import yaml
 except ImportError:
-    raise ImportError("PyYAML is required for krusch-rag-packs. Install via `pip install pyyaml`.")
+    raise ImportError("PyYAML is required for krusch-authority-packs. Install via `pip install pyyaml`.")
 
 
 MAX_CHUNK_TOKEN_BUDGET = 850

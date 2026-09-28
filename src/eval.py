@@ -1,5 +1,5 @@
 """
-Evaluation Benchmark Suite for RAG Packs vs. Naive Vector RAG.
+Binder Conformance Suite: Gate Verification for Authority Packs vs. Naive Vector RAG.
 Evaluates 5 standardized query classes:
 1. In-scope OMI (Owner Move-In questions with explicit jurisdiction)
 2. Cross-city traps (LA question phrased in SF statutory vocabulary)
@@ -267,7 +267,7 @@ class BenchmarkRunner:
 
 def print_eval_table(results: List[EvalResultRow]):
     print("\n" + "=" * 95)
-    print("      KRUSCH RAG PACKS vs. VECTOR BLEED: GC-GRADE BENCHMARK (N=180)")
+    print("      KRUSCH AUTHORITY PACKS: BINDER CONFORMANCE SUITE (N=180)")
     print("=" * 95)
     print(f"{'Query Class':<24} | {'n':<4} | {'Correct Juris':<14} | {'Correct Slot':<12} | {'Proper Refuse':<13} | {'Wrong-Law Blend':<15}")
     print("-" * 95)
