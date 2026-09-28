@@ -8,6 +8,10 @@
 [![Wrong-Law Blend: 0.0%](https://img.shields.io/badge/Wrong--Law_Blend-0.0%25-brightgreen.svg)](https://krusch.dev/articles/authority-packs.html)
 [![Product: Governed Modules](https://img.shields.io/badge/Category-Governed%20Knowledge%20Modules-cyan.svg)](https://krusch.dev/articles/authority-packs.html)
 
+<p align="center">
+  <img src="assets/authority_packs_hero.jpg" alt="Authority Packs Architecture &amp; Command Center" width="100%">
+</p>
+
 ---
 
 ## 💼 The Commercial Reality: Buyers Don't Buy Retrieval
