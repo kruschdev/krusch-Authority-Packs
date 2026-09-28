@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "krusch-rag-packs"
+version = "1.0.0"
+description = "Sovereign Domain Scoping & Deterministic RAG Pack Specification, Binder, and Reference Library"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Kevin Ruschman", email = "kevin@krusch.dev" }]
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[project.scripts]
+rag-pack = "src.validator:main"
