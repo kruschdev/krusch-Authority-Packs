@@ -3,6 +3,7 @@
 > **Controlled Rulebooks for Enterprise AI — by Jurisdiction and Effective Date**  
 > An open architecture, specification, and evaluation harness for governed knowledge modules in high-assurance legal, financial, and enterprise workflows.
 
+[![CI](https://github.com/kruschdev/krusch-Authority-Packs/actions/workflows/test.yml/badge.svg)](https://github.com/kruschdev/krusch-Authority-Packs/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Benchmark: GC-Grade](https://img.shields.io/badge/Benchmark_Eval-n%3D180%20(5%20Classes)-gold.svg)](https://krusch.dev/articles/authority-packs.html)
 [![Wrong-Law Blend: 0.0%](https://img.shields.io/badge/Wrong--Law_Blend-0.0%25-brightgreen.svg)](https://krusch.dev/articles/authority-packs.html)
