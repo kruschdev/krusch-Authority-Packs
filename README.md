@@ -191,7 +191,7 @@ python3 -m src.validator info packs/legal/ca_oakland.yaml
 python3 -m src.eval
 ```
 
-### Run Automated Unit Tests (25 Tests)
+### Run Automated Unit Tests (26 Tests)
 ```bash
 pytest -v tests/
 ```
