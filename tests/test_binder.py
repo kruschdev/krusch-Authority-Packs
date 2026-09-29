@@ -27,6 +27,14 @@ def test_in_scope_oakland_binding(binder):
     assert any("HARMONIZED_FLOOR" in j for j in res.join_plan)
 
 
+def test_in_scope_berkeley_binding(binder):
+    res = binder.bind("Under the Berkeley Municipal Code, what are the owner move in eviction rules?")
+    assert res.status == "BOUND"
+    assert res.primary_pack_id == "ca_berkeley_pack_v1"
+    assert "ca_berkeley_pack_v1" in res.join_plan[0]
+    assert any("HARMONIZED_FLOOR" in j for j in res.join_plan)
+
+
 def test_cross_city_trap_refusal(binder):
     # Mentioning two conflicting cities must trigger REFUSED_AMBIGUOUS
     res = binder.bind("Can an owner move-in in Los Angeles use the 36-month San Francisco rule?")

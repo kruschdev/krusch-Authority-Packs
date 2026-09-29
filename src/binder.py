@@ -69,6 +69,7 @@ class PackBinder:
         "Oakland": [r"\boakland\b", r"\balameda county\b", r"\bomc\b", r"\bmeasure ee\b"],
         "San Francisco": [r"\bsan francisco\b", r"\bs\.?f\.?\b", r"\bsf rent ordinance\b", r"\badmin(?:istrative)? code chapter 37\b"],
         "Los Angeles": [r"\blos angeles\b", r"\bl\.?a\.?\b", r"\blamc\b", r"\brso\b", r"\blahd\b"],
+        "Berkeley": [r"\bberkeley\b", r"\bbmc\b", r"\bmeasure mm\b", r"\brent stabilization board\b"],
     }
 
     DOMAIN_PATTERNS = {

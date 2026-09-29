@@ -66,6 +66,24 @@ def test_california_trilogy_slot_invariants():
     assert la_rso.slots["failure_to_file_voids_notice"] is True
 
 
+def test_berkeley_slot_invariants():
+    berkeley = RagPackValidator.load(os.path.join(os.path.dirname(__file__), "..", "packs", "legal", "ca_berkeley.yaml"))
+    
+    # 1. State deposit limits (AB 12)
+    bk_dep = berkeley.find_by_citation("1950.5(c)")
+    assert bk_dep is not None
+    assert bk_dep.slots["deposit_cap_months"] == 1.0
+    assert bk_dep.slots["accounting_days"] == 21
+
+    # 2. Berkeley BMC 13.76.130 Owner move-in 50% ownership floor & 36-month occupancy
+    bk_omi = berkeley.find_by_citation("13.76.130")
+    assert bk_omi is not None
+    assert bk_omi.slots["minimum_ownership_percent_omi"] == 50.0
+    assert bk_omi.slots["omi_occupancy_duration_months"] == 36
+    assert bk_omi.slots["requires_written_warning_notice"] is True
+    assert bk_omi.slots["requires_relocation_payment"] is True
+
+
 def test_asc606_accounting_slots():
     asc606 = RagPackValidator.load(os.path.join(os.path.dirname(__file__), "..", "packs", "accounting", "biz_accounting_asc606.yaml"))
     step1 = asc606.find_by_citation("asc_606_step_1")
