@@ -51,4 +51,15 @@ jobs:
 
     - name: Run Automated Test Suite
       run: |
-        python -m pytest tests/ -v
+        python -m pytest tests/ -v 2>&1 | tee test.log
+
+    - name: Notify on Failure
+      if: failure()
+      run: |
+        TAIL_LOG=$(tail -n 25 test.log 2>/dev/null || echo "No test log available")
+        curl -s \
+          -H "Title: CI Failure: krusch-authority-packs (${{ matrix.python-version }})" \
+          -H "Priority: urgent" \
+          -H "Tags: warning,github-actions" \
+          -d "$TAIL_LOG" \
+          https://ntfy.sh/krusch-ci-alerts
