@@ -84,6 +84,44 @@ def test_berkeley_slot_invariants():
     assert bk_omi.slots["requires_relocation_payment"] is True
 
 
+def test_santa_monica_slot_invariants():
+    sm = RagPackValidator.load(os.path.join(os.path.dirname(__file__), "..", "packs", "legal", "ca_santa_monica.yaml"))
+    
+    # 1. State deposit limits (AB 12)
+    sm_dep = sm.find_by_citation("1950.5(c)")
+    assert sm_dep is not None
+    assert sm_dep.slots["deposit_cap_months"] == 1.0
+    assert sm_dep.slots["accounting_days"] == 21
+
+    # 2. Santa Monica Charter Art. XVIII § 1806 OMI 50% ownership floor & school-year ban
+    sm_omi = sm.find_by_citation("1806")
+    assert sm_omi is not None
+    assert sm_omi.slots["minimum_ownership_percent_omi"] == 50.0
+    assert sm_omi.slots["omi_occupancy_duration_months"] == 36
+    assert sm_omi.slots["school_year_eviction_ban"] is True
+    assert sm_omi.slots["requires_written_warning_notice"] is True
+    assert sm_omi.slots["requires_relocation_payment"] is True
+
+
+def test_san_jose_slot_invariants():
+    sj = RagPackValidator.load(os.path.join(os.path.dirname(__file__), "..", "packs", "legal", "ca_san_jose.yaml"))
+    
+    # 1. State deposit limits (AB 12)
+    sj_dep = sj.find_by_citation("1950.5(c)")
+    assert sj_dep is not None
+    assert sj_dep.slots["deposit_cap_months"] == 1.0
+    assert sj_dep.slots["accounting_days"] == 21
+
+    # 2. San Jose SJMC § 17.24.010 OMI 50% ownership floor & rent registry filing
+    sj_omi = sj.find_by_citation("17.24.010")
+    assert sj_omi is not None
+    assert sj_omi.slots["minimum_ownership_percent_omi"] == 50.0
+    assert sj_omi.slots["omi_occupancy_duration_months"] == 36
+    assert sj_omi.slots["requires_rent_registry_filing"] is True
+    assert sj_omi.slots["requires_written_warning_notice"] is True
+    assert sj_omi.slots["requires_relocation_payment"] is True
+
+
 def test_asc606_accounting_slots():
     asc606 = RagPackValidator.load(os.path.join(os.path.dirname(__file__), "..", "packs", "accounting", "biz_accounting_asc606.yaml"))
     step1 = asc606.find_by_citation("asc_606_step_1")

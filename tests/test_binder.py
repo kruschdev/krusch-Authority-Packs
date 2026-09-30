@@ -35,6 +35,22 @@ def test_in_scope_berkeley_binding(binder):
     assert any("HARMONIZED_FLOOR" in j for j in res.join_plan)
 
 
+def test_in_scope_santa_monica_binding(binder):
+    res = binder.bind("Under Santa Monica Rent Control, what is the owner move in ownership floor?")
+    assert res.status == "BOUND"
+    assert res.primary_pack_id == "ca_santa_monica_pack_v1"
+    assert "ca_santa_monica_pack_v1" in res.join_plan[0]
+    assert any("HARMONIZED_FLOOR" in j for j in res.join_plan)
+
+
+def test_in_scope_san_jose_binding(binder):
+    res = binder.bind("What are the San Jose Tenant Protection Ordinance just cause eviction rules?")
+    assert res.status == "BOUND"
+    assert res.primary_pack_id == "ca_san_jose_pack_v1"
+    assert "ca_san_jose_pack_v1" in res.join_plan[0]
+    assert any("HARMONIZED_FLOOR" in j for j in res.join_plan)
+
+
 def test_cross_city_trap_refusal(binder):
     # Mentioning two conflicting cities must trigger REFUSED_AMBIGUOUS
     res = binder.bind("Can an owner move-in in Los Angeles use the 36-month San Francisco rule?")

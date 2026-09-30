@@ -94,6 +94,12 @@ def main():
         help="Filing window in days to rent board or housing department",
     )
     parser.add_argument(
+        "--section-number",
+        type=str,
+        default=None,
+        help="Section number for the municipal ordinance (e.g. 1806, 17.24.010)",
+    )
+    parser.add_argument(
         "--overwrite",
         action="store_true",
         help="Overwrite target file if it already exists",
@@ -116,12 +122,41 @@ def main():
     print(f"   • Effective From: {args.effective_from}")
     print(f"   • Target Path: {output_path}")
 
-    sec_num = "13.76.130" if "berkeley" in slug else "100.01"
+    # Determine default section and citation specifics per municipality
+    if "berkeley" in slug:
+        sec_num = args.section_number or "13.76.130"
+        citation = f"Berkeley Municipal Code § {sec_num}"
+        title = "Berkeley Eviction Protections & Permissible Grounds"
+        extra_slots = {}
+    elif "santa_monica" in slug:
+        sec_num = args.section_number or "1806"
+        citation = f"Santa Monica City Charter Article XVIII § {sec_num}"
+        title = "Santa Monica Rent Control Law — Eviction Grounds & OMI Protections"
+        extra_slots = {"school_year_eviction_ban": True}
+    elif "san_jose" in slug:
+        sec_num = args.section_number or "17.24.010"
+        citation = f"San Jose Municipal Code § {sec_num}"
+        title = "San Jose Tenant Protection Ordinance — Just Cause Grounds & OMI"
+        extra_slots = {"requires_rent_registry_filing": True}
+    else:
+        sec_num = args.section_number or "100.01"
+        citation = f"{code_name} § {sec_num}"
+        title = f"{muni} Eviction Protections & Permissible Grounds"
+        extra_slots = {}
+
+    statutory_slots = {
+        "minimum_ownership_percent_omi": args.omi_floor,
+        "omi_occupancy_duration_months": args.omi_occupancy_months,
+        "requires_written_warning_notice": True,
+        "requires_relocation_payment": True,
+    }
+    statutory_slots.update(extra_slots)
+
     custom_statutes = [
         ScaffoldingEntry(
-            citation=f"{code_name} § {sec_num}",
+            citation=citation,
             section_number=sec_num,
-            title=f"{muni} Eviction Protections & Permissible Grounds",
+            title=title,
             topic="Just Cause Evictions",
             authority_class="municipal_ordinance",
             hierarchy_level="section",
@@ -138,12 +173,7 @@ def main():
                 f"holding at least {args.omi_floor}% recorded ownership interest for a continuous period of not less than "
                 f"{args.omi_occupancy_months} consecutive months."
             ),
-            statutory_slots={
-                "minimum_ownership_percent_omi": args.omi_floor,
-                "omi_occupancy_duration_months": args.omi_occupancy_months,
-                "requires_written_warning_notice": True,
-                "requires_relocation_payment": True,
-            },
+            statutory_slots=statutory_slots,
             preempts=[f"{code_name} Prior Inconsistent Eviction Provisions"],
             exceptions_ref=f"{code_name} Section Exemptions",
             defines_terms=["Covered Unit", "Disabled", "Catastrophically Ill", "Senior Citizen"],
