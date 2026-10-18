@@ -47,6 +47,7 @@ class AuthorityEntry:
     exceptions_ref: Optional[str] = None
     defines_terms: List[str] = field(default_factory=list)
     estimated_tokens: int = 0
+    controlling_precedents: List[Dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -193,6 +194,7 @@ class RagPackValidator:
                     exceptions_ref=e.get("exceptions_ref"),
                     defines_terms=e.get("defines_terms", []),
                     estimated_tokens=token_count,
+                    controlling_precedents=e.get("controlling_precedents", []) or [],
                 )
             )
 

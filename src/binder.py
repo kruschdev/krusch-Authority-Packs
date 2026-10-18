@@ -9,11 +9,22 @@ Resolves:
 
 from __future__ import annotations
 
+import os
 import re
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
+# Ensure monorepo lib-py is discoverable when running inside homelab
+_MONOREPO_LIB_PY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "lib-py"))
+if os.path.isdir(_MONOREPO_LIB_PY) and _MONOREPO_LIB_PY not in sys.path:
+    sys.path.insert(0, _MONOREPO_LIB_PY)
+
+try:
+    from krusch_toolkit.decide import System1Decider
+except ImportError:
+    System1Decider = None  # type: ignore
 
 
 @dataclass
@@ -38,6 +49,8 @@ class PackBindingResult:
     join_plan: List[str] = field(default_factory=list)
     refusal_reason: Optional[str] = None
     entities: Optional[JurisdictionEntities] = None
+    system1_intent: Optional[str] = None
+    system1_confidence: float = 0.0
 
 
 class PackRegistry:
@@ -89,8 +102,78 @@ class PackBinder:
         r"\b(?:in|during|year)\s+(20\d{2})\b",
     ]
 
-    def __init__(self, registry: PackRegistry):
+    INTENT_TO_DOMAIN = {
+        "FINANCIAL_ACCOUNTING": "Financial Accounting & Revenue Recognition",
+        "COMMERCIAL_SAAS": "Commercial SaaS & Enterprise Licensing",
+        "VENDOR_PROCUREMENT": "Vendor Procurement & Master Services Agreements",
+    }
+
+    def __init__(self, registry: PackRegistry, decider: Optional[Any] = None):
         self.registry = registry
+        self.decider = decider or (System1Decider(deterministic=True) if System1Decider else None)
+
+    def classify_query_intent(self, query: str, use_system1_llm: bool = False) -> Dict[str, Any]:
+        """
+        Classify query into canonical domain intents using deterministic regex gates
+        or Sovereign System 1 single-token logprob marginalization.
+        """
+        text_lower = query.lower()
+        choices = ["TENANCY", "FINANCIAL_ACCOUNTING", "COMMERCIAL_SAAS", "VENDOR_PROCUREMENT", "OUT_OF_SCOPE"]
+
+        # Fast-path deterministic keyword check
+        if any(k in text_lower for k in ["evict", "rent", "tenant", "security deposit", "landlord", "lease", "habitability", "move-in", "move in"]):
+            return {"choice": "TENANCY", "confidence": 0.96, "mode": "deterministic_gate"}
+        for intent_key, domain_name in self.INTENT_TO_DOMAIN.items():
+            patterns = self.DOMAIN_PATTERNS.get(domain_name, [])
+            if any(re.search(p, text_lower) for p in patterns):
+                return {"choice": intent_key, "confidence": 0.94, "mode": "deterministic_gate"}
+
+        if self.decider is not None:
+            decider_instance = (
+                System1Decider(deterministic=False) if (use_system1_llm and System1Decider) else self.decider
+            )
+            res = decider_instance.decide(
+                state=f"User Legal/Compliance Query: {query}",
+                question="Which authority domain governs this query?",
+                choices=choices,
+            )
+            return {
+                "choice": res.get("choice", "OUT_OF_SCOPE"),
+                "confidence": res.get("confidence", 0.0),
+                "distribution": res.get("distribution", {}),
+                "mode": res.get("mode", "deterministic_fallback"),
+            }
+
+        return {"choice": "OUT_OF_SCOPE", "confidence": 0.5, "mode": "fallback"}
+
+    def decide_pack_routing(
+        self,
+        query: str,
+        context: Optional[Dict[str, Any]] = None,
+        min_confidence: float = 0.85,
+        use_system1_llm: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        Combine System 1 calibrated intent classification with deterministic PackBinder refusal gates.
+        Never overrides multi-city ambiguity, missing-municipality tenancy refusal, or coverage exclusions.
+        """
+        intent_res = self.classify_query_intent(query, use_system1_llm=use_system1_llm)
+        binding = self.bind(query, context=context)
+        binding.system1_intent = intent_res["choice"]
+        binding.system1_confidence = intent_res["confidence"]
+
+        is_confident = binding.status == "BOUND" and intent_res["confidence"] >= min_confidence
+        return {
+            "status": binding.status,
+            "confident_route": is_confident,
+            "intent": intent_res["choice"],
+            "confidence": intent_res["confidence"],
+            "decision_mode": intent_res.get("mode", "deterministic_gate"),
+            "primary_pack_id": binding.primary_pack_id,
+            "join_plan": binding.join_plan,
+            "refusal_reason": binding.refusal_reason,
+            "binding": binding,
+        }
 
     def extract_entities(self, query: str, context: Optional[Dict[str, Any]] = None) -> JurisdictionEntities:
         entities = JurisdictionEntities(raw_query=query)

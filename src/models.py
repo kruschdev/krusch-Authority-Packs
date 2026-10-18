@@ -91,6 +91,7 @@ class AuthorityEntry:
     defines_terms: List[str] = field(default_factory=list)
     citation_coordinates: Optional[SourceSpan] = None
     estimated_tokens: int = 0
+    controlling_precedents: List[Dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass

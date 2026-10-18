@@ -77,3 +77,25 @@ def test_as_of_historical_date_refusal(binder):
     res = binder.bind("What was the security deposit cap in Oakland as of 2022-01-01?", context={"as_of_date": "2022-01-01"})
     assert res.status == "REFUSED_STALE_OR_PRE_EFFECTIVE"
     assert "predates pack effective date" in res.refusal_reason
+
+
+def test_system1_intent_and_routing_preserves_refusals(binder):
+    # 1. Valid Oakland tenancy query routes with high confidence
+    route_ok = binder.decide_pack_routing("What are the landlord owner move in rules in Oakland, CA?")
+    assert route_ok["status"] == "BOUND"
+    assert route_ok["confident_route"] is True
+    assert route_ok["intent"] == "TENANCY"
+    assert route_ok["confidence"] >= 0.85
+    assert route_ok["primary_pack_id"] == "ca_oakland_pack_v1"
+
+    # 2. Cross-city query is still strictly refused even with TENANCY intent
+    route_ambig = binder.decide_pack_routing("Can an owner move-in in Los Angeles use the 36-month San Francisco rule?")
+    assert route_ambig["status"] == "REFUSED_AMBIGUOUS"
+    assert route_ambig["confident_route"] is False
+    assert route_ambig["intent"] == "TENANCY"
+
+    # 3. Financial accounting query classifies as FINANCIAL_ACCOUNTING
+    intent_fin = binder.classify_query_intent("How are performance obligations recognized under ASC 606?")
+    assert intent_fin["choice"] == "FINANCIAL_ACCOUNTING"
+    assert intent_fin["confidence"] >= 0.85
+
