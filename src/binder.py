@@ -120,6 +120,18 @@ class PackBinder:
             r"\bclra\b", r"\b1750\b", r"\b17200\b", r"\bunfair competition\b",
             r"\bautomatic renewal\b", r"\barl\b", r"\b17602\b"
         ],
+        "California Tort & Civil Liability Law": [
+            r"\b1714\b", r"\browland v\.? christian\b", r"\bcomparative fault\b",
+            r"\bproposition 51\b", r"\b1431\.2\b", r"\bstrict products? liability\b",
+            r"\bgovernment claims act\b", r"\b911\.2\b", r"\bpunitive damages\b",
+            r"\b3294\b", r"\b335\.1\b", r"\bdelayed discovery\b"
+        ],
+        "California Corporate Governance & Securities Law": [
+            r"\b1601\b", r"\b1602\b", r"\bshareholder inspection\b", r"\b2115\b",
+            r"\bquasi-?california\b", r"\bahmanson\b", r"\brullca\b", r"\b17704\.09\b",
+            r"\b17701\.10\b", r"\b25110\b", r"\b25401\b", r"\b25501\b",
+            r"\binvoluntary dissolution\b", r"\b1800\b", r"\b2000\b"
+        ],
     }
 
     DATE_PATTERNS = [
@@ -137,6 +149,8 @@ class PackBinder:
         "EMPLOYMENT_LABOR": "California Employment & Labor Law",
         "INTELLECTUAL_PROPERTY": "California Intellectual Property & Trade Secrets Law",
         "CONSUMER_PRIVACY": "California Consumer Protection & Privacy Law",
+        "TORT_LIABILITY": "California Tort & Civil Liability Law",
+        "CORPORATE_GOVERNANCE": "California Corporate Governance & Securities Law",
     }
 
     def __init__(self, registry: PackRegistry, decider: Optional[Any] = None):
@@ -159,6 +173,8 @@ class PackBinder:
             "EMPLOYMENT_LABOR",
             "INTELLECTUAL_PROPERTY",
             "CONSUMER_PRIVACY",
+            "TORT_LIABILITY",
+            "CORPORATE_GOVERNANCE",
             "OUT_OF_SCOPE",
         ]
 

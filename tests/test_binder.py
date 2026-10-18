@@ -136,5 +136,20 @@ def test_cross_domain_binding_and_intent(binder):
     intent_priv = binder.classify_query_intent("CCPA opt-out of sale or sharing under 1798.120 and ARL 17602")
     assert intent_priv["choice"] == "CONSUMER_PRIVACY"
 
+    # 6. Tort & civil liability query binds to ca_tort_liability_pack_v1
+    bind_tort = binder.bind("What is the Proposition 51 several liability rule for non-economic damages under 1431.2 and Rowland v. Christian?")
+    assert bind_tort.status == "BOUND"
+    assert bind_tort.primary_pack_id == "ca_tort_liability_pack_v1"
+    intent_tort = binder.classify_query_intent("Government Claims Act 911.2 presentation and punitive damages 3294")
+    assert intent_tort["choice"] == "TORT_LIABILITY"
+
+    # 7. Corporate governance & securities query binds to ca_corporate_governance_pack_v1
+    bind_corp = binder.bind("Does Corporations Code 2115 apply to quasi-California corporations and shareholder inspection under 1601?")
+    assert bind_corp.status == "BOUND"
+    assert bind_corp.primary_pack_id == "ca_corporate_governance_pack_v1"
+    intent_corp = binder.classify_query_intent("RULLCA LLC fiduciary duties 17704.09 and securities rescission 25501")
+    assert intent_corp["choice"] == "CORPORATE_GOVERNANCE"
+
+
 
 
