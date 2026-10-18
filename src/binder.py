@@ -110,6 +110,16 @@ class PackBinder:
             r"\brest break\b", r"\bwaiting time\b", r"\b203\b", r"\babc test\b", r"\bdynamex\b",
             r"\bindependent contractor\b"
         ],
+        "California Intellectual Property & Trade Secrets Law": [
+            r"\btrade secrets?\b", r"\bcutsa\b", r"\b3426\b", r"\bmisappropriation\b",
+            r"\binvention assignment\b", r"\b2870\b", r"\bright of publicity\b", r"\b3344\b",
+            r"\b2019\.210\b", r"\bparticularity\b"
+        ],
+        "California Consumer Protection & Privacy Law": [
+            r"\bccpa\b", r"\bcpra\b", r"\b1798\.100\b", r"\b1798\.105\b", r"\bopt-?out\b",
+            r"\bclra\b", r"\b1750\b", r"\b17200\b", r"\bunfair competition\b",
+            r"\bautomatic renewal\b", r"\barl\b", r"\b17602\b"
+        ],
     }
 
     DATE_PATTERNS = [
@@ -125,6 +135,8 @@ class PackBinder:
         "CRIMINAL_DEFENSE": "Criminal Law & Constitutional Procedure",
         "COMMERCIAL_CONTRACTS": "California Commercial & Business Law",
         "EMPLOYMENT_LABOR": "California Employment & Labor Law",
+        "INTELLECTUAL_PROPERTY": "California Intellectual Property & Trade Secrets Law",
+        "CONSUMER_PRIVACY": "California Consumer Protection & Privacy Law",
     }
 
     def __init__(self, registry: PackRegistry, decider: Optional[Any] = None):
@@ -145,6 +157,8 @@ class PackBinder:
             "CRIMINAL_DEFENSE",
             "COMMERCIAL_CONTRACTS",
             "EMPLOYMENT_LABOR",
+            "INTELLECTUAL_PROPERTY",
+            "CONSUMER_PRIVACY",
             "OUT_OF_SCOPE",
         ]
 

@@ -122,4 +122,19 @@ def test_cross_domain_binding_and_intent(binder):
     intent_emp = binder.classify_query_intent("Labor Code 226 itemized wage statement violation")
     assert intent_emp["choice"] == "EMPLOYMENT_LABOR"
 
+    # 4. Intellectual property query binds to ca_intellectual_property_pack_v1
+    bind_ip = binder.bind("What are the pre-discovery trade secret identification rules under CCP 2019.210 and CUTSA 3426?")
+    assert bind_ip.status == "BOUND"
+    assert bind_ip.primary_pack_id == "ca_intellectual_property_pack_v1"
+    intent_ip = binder.classify_query_intent("CUTSA trade secret misappropriation under 3426 and invention assignment 2870")
+    assert intent_ip["choice"] == "INTELLECTUAL_PROPERTY"
+
+    # 5. Consumer privacy query binds to ca_consumer_privacy_pack_v1
+    bind_priv = binder.bind("Can a consumer request personal information deletion under CCPA CPRA 1798.100 and CLRA 1750?")
+    assert bind_priv.status == "BOUND"
+    assert bind_priv.primary_pack_id == "ca_consumer_privacy_pack_v1"
+    intent_priv = binder.classify_query_intent("CCPA opt-out of sale or sharing under 1798.120 and ARL 17602")
+    assert intent_priv["choice"] == "CONSUMER_PRIVACY"
+
+
 
