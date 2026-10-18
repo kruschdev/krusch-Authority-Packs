@@ -92,7 +92,23 @@ class PackBinder:
         "Commercial SaaS & Enterprise Licensing": [r"\bsaas\b", r"\bsla uptime\b", r"\bmaster services agreement\b", r"\bmsa\b", r"\blimitation of liability\b"],
         "Vendor Procurement & Master Services Agreements": [
             r"\bprocurement\b", r"\bvendor agreement\b", r"\bnet[\s-]30\b", r"\bdeliverables?\b",
-            r"\bclause\s*\d+\b", r"\bliquidated damages\b", r"\bunenforceable\b", r"\bpenalty\b"
+            r"\bclause\s*\d+\b", r"\bpenalty\b"
+        ],
+        "Criminal Law & Constitutional Procedure": [
+            r"\bpenal code\b", r"\bsearch and seizure\b", r"\bsuppress(?:ion)?\b", r"\b1538\.5\b",
+            r"\b995\b", r"\bhumphrey\b", r"\bbail\b", r"\bmiranda\b", r"\barrest\b",
+            r"\bdeterminate sentenc\w*\b", r"\btriad\b", r"\bbrady\b", r"\bfactual innocence\b"
+        ],
+        "California Commercial & Business Law": [
+            r"\bnon-?compete\b", r"\b16600\b", r"\b1668\b", r"\b1717\b", r"\bexculpatory\b",
+            r"\bliquidated damages\b", r"\bcommercial code\b", r"\bucc\b", r"\bfiduciary duty\b",
+            r"\bbusiness judgment\b"
+        ],
+        "California Employment & Labor Law": [
+            r"\blabor code\b", r"\bwage statement\b", r"\bpaystub\b", r"\b226\b", r"\b2802\b",
+            r"\breimbursement\b", r"\bwhistleblower\b", r"\b1102\.5\b", r"\bmeal break\b",
+            r"\brest break\b", r"\bwaiting time\b", r"\b203\b", r"\babc test\b", r"\bdynamex\b",
+            r"\bindependent contractor\b"
         ],
     }
 
@@ -106,6 +122,9 @@ class PackBinder:
         "FINANCIAL_ACCOUNTING": "Financial Accounting & Revenue Recognition",
         "COMMERCIAL_SAAS": "Commercial SaaS & Enterprise Licensing",
         "VENDOR_PROCUREMENT": "Vendor Procurement & Master Services Agreements",
+        "CRIMINAL_DEFENSE": "Criminal Law & Constitutional Procedure",
+        "COMMERCIAL_CONTRACTS": "California Commercial & Business Law",
+        "EMPLOYMENT_LABOR": "California Employment & Labor Law",
     }
 
     def __init__(self, registry: PackRegistry, decider: Optional[Any] = None):
@@ -118,7 +137,16 @@ class PackBinder:
         or Sovereign System 1 single-token logprob marginalization.
         """
         text_lower = query.lower()
-        choices = ["TENANCY", "FINANCIAL_ACCOUNTING", "COMMERCIAL_SAAS", "VENDOR_PROCUREMENT", "OUT_OF_SCOPE"]
+        choices = [
+            "TENANCY",
+            "FINANCIAL_ACCOUNTING",
+            "COMMERCIAL_SAAS",
+            "VENDOR_PROCUREMENT",
+            "CRIMINAL_DEFENSE",
+            "COMMERCIAL_CONTRACTS",
+            "EMPLOYMENT_LABOR",
+            "OUT_OF_SCOPE",
+        ]
 
         # Fast-path deterministic keyword check
         if any(k in text_lower for k in ["evict", "rent", "tenant", "security deposit", "landlord", "lease", "habitability", "move-in", "move in"]):

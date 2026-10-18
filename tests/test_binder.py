@@ -99,3 +99,27 @@ def test_system1_intent_and_routing_preserves_refusals(binder):
     assert intent_fin["choice"] == "FINANCIAL_ACCOUNTING"
     assert intent_fin["confidence"] >= 0.85
 
+
+def test_cross_domain_binding_and_intent(binder):
+    # 1. Criminal defense query binds to ca_criminal_defense_pack_v1
+    bind_crim = binder.bind("Can evidence from a warrantless search be suppressed under Penal Code 1538.5?")
+    assert bind_crim.status == "BOUND"
+    assert bind_crim.primary_pack_id == "ca_criminal_defense_pack_v1"
+    intent_crim = binder.classify_query_intent("Penal Code 1538.5 suppression motion")
+    assert intent_crim["choice"] == "CRIMINAL_DEFENSE"
+
+    # 2. Commercial contracts query binds to ca_commercial_contracts_pack_v1
+    bind_comm = binder.bind("Are non-compete agreements void under California Business and Professions Code 16600?")
+    assert bind_comm.status == "BOUND"
+    assert bind_comm.primary_pack_id == "ca_commercial_contracts_pack_v1"
+    intent_comm = binder.classify_query_intent("Non-compete clause in business sale agreement under 16600")
+    assert intent_comm["choice"] == "COMMERCIAL_CONTRACTS"
+
+    # 3. Employment law query binds to ca_employment_labor_pack_v1
+    bind_emp = binder.bind("What are the statutory penalties under Labor Code 226 for inaccurate paystub wage statements?")
+    assert bind_emp.status == "BOUND"
+    assert bind_emp.primary_pack_id == "ca_employment_labor_pack_v1"
+    intent_emp = binder.classify_query_intent("Labor Code 226 itemized wage statement violation")
+    assert intent_emp["choice"] == "EMPLOYMENT_LABOR"
+
+
