@@ -146,3 +146,39 @@ def test_invalid_pack_rejection():
     }
     with pytest.raises(ValidationError):
         RagPackValidator.validate_dict(bad_data)
+
+
+def test_pack_io_error_guards(tmp_path):
+    from src.validator import PackReadError, PackWriteError
+    from src.scaffold import PackScaffolder
+
+    # 1. Passing a directory path to RagPackValidator.load triggers OSError -> PackReadError
+    with pytest.raises(PackReadError):
+        RagPackValidator.load(str(tmp_path))
+
+    # 2. Passing a directory path to write_pack triggers OSError -> PackWriteError
+    valid_pack = {
+        "pack_id": "test_io_pack",
+        "version": "1.0.0",
+        "publisher": "Test",
+        "description": "IO test pack",
+        "coverage": {
+            "covered_topics": ["io_test"],
+            "known_uncovered_topics": [],
+        },
+        "statutes": [
+            {
+                "id": "s1",
+                "citation": "§ 1",
+                "topic": "io_test",
+                "title": "Title",
+                "summary": "Summary",
+                "raw_content": "Text",
+                "statutory_slots": {},
+            }
+        ],
+    }
+    with pytest.raises(PackWriteError):
+        PackScaffolder.write_pack(valid_pack, str(tmp_path), overwrite=True)
+
+

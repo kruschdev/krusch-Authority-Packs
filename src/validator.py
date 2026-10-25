@@ -12,18 +12,49 @@ import sys
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Set
 
-try:
-    import yaml
-except ImportError:
-    raise ImportError("PyYAML is required for krusch-authority-packs. Install via `pip install pyyaml`.")
+from .models import AuthorityEntry
+
+# Defer strict PyYAML requirement to RagPackValidator._resolve_yaml_loader so schema/model modules import cleanly
+
 
 
 MAX_CHUNK_TOKEN_BUDGET = 850
 REQUIRED_ROOT_KEYS = {"pack_id", "version", "publisher", "coverage", "description"}
 
+__all__ = [
+    "MAX_CHUNK_TOKEN_BUDGET",
+    "REQUIRED_ROOT_KEYS",
+    "ValidationError",
+    "PackIOError",
+    "PackReadError",
+    "PackWriteError",
+    "StatutorySlot",
+    "RagPack",
+    "RagPackValidator",
+    "main",
+]
+
 
 class ValidationError(Exception):
     """Raised when a RAG pack violates schema or invariant rules."""
+    pass
+
+
+class PackIOError(ValidationError):
+    """Base exception raised when reading or writing a RAG pack fails due to OS I/O error."""
+
+    def __init__(self, message: str, original_error: Optional[OSError] = None) -> None:
+        super().__init__(message)
+        self.original_error = original_error
+
+
+class PackReadError(PackIOError):
+    """Raised when reading a RAG pack file from disk fails."""
+    pass
+
+
+class PackWriteError(PackIOError):
+    """Raised when writing a RAG pack file to disk fails."""
     pass
 
 
@@ -32,22 +63,6 @@ class StatutorySlot:
     name: str
     value: Any
     data_type: str
-
-
-@dataclass
-class AuthorityEntry:
-    citation: str
-    title: str
-    topic: str
-    authority_class: str
-    raw_content: str
-    slots: Dict[str, Any] = field(default_factory=dict)
-    preempts: List[str] = field(default_factory=list)
-    preempted_by: List[str] = field(default_factory=list)
-    exceptions_ref: Optional[str] = None
-    defines_terms: List[str] = field(default_factory=list)
-    estimated_tokens: int = 0
-    controlling_precedents: List[Dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -96,13 +111,28 @@ class RagPackValidator:
             return 0
         return max(1, len(text.strip()) // 4)
 
+    @staticmethod
+    def _resolve_yaml_loader():
+        try:
+            import yaml as _yaml
+            return _yaml
+        except ImportError as exc:
+            raise ImportError(
+                "PyYAML is required to load authority packs. Install with `pip install pyyaml`."
+            ) from exc
+
     @classmethod
     def load(cls, file_path: str) -> RagPack:
+        yaml_mod = cls._resolve_yaml_loader()
+
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"Pack file not found: {file_path}")
 
-        with open(file_path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = yaml_mod.safe_load(f)
+        except (OSError, yaml_mod.YAMLError) as exc:
+            raise PackReadError(f"Failed to read or parse pack file {file_path}: {exc}", original_error=exc) from exc
 
         if not isinstance(data, dict):
             raise ValidationError(f"Root YAML document must be a dictionary in {file_path}")
@@ -214,7 +244,7 @@ class RagPackValidator:
         )
 
 
-def main():
+def main(argv: Optional[List[str]] = None) -> None:
     parser = argparse.ArgumentParser(description="Validate and inspect RAG Packs.")
     subparsers = parser.add_subparsers(dest="command")
 
@@ -224,7 +254,7 @@ def main():
     info_parser = subparsers.add_parser("info", help="Inspect a RAG Pack.")
     info_parser.add_argument("path", help="File path to inspect.")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.command == "validate":
         total_files = 0

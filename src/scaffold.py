@@ -25,10 +25,8 @@ from __future__ import annotations
 
 import hashlib
 import os
-import re
-from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Union
 
 try:
     import yaml
@@ -36,101 +34,15 @@ except ImportError:
     raise ImportError("PyYAML is required. Install via `pip install pyyaml`.")
 
 from .validator import RagPackValidator
+from .scaffold_models import WORD_NUMERALS, ScaffoldingEntry
+from .scaffold_extractor import SlotExtractor
 
-
-# Common number words for length-descending substitution
-WORD_NUMERALS = {
-    "thirty-six": 36,
-    "thirty-three": 33,
-    "twenty-five": 25,
-    "twenty-one": 21,
-    "thirty": 30,
-    "twenty": 20,
-    "twelve": 12,
-    "ten": 10,
-    "nine": 9,
-    "eight": 8,
-    "seven": 7,
-    "six": 6,
-    "five": 5,
-    "four": 4,
-    "three": 3,
-    "two": 2,
-    "one": 1,
-}
-
-
-@dataclass
-class ScaffoldingEntry:
-    citation: str
-    section_number: str
-    title: str
-    topic: str
-    authority_class: str
-    hierarchy_level: str
-    effective_date: str
-    source_url: str
-    publisher: str
-    edition: str
-    raw_content: str
-    statutory_slots: Dict[str, Any] = field(default_factory=dict)
-    preempts: List[str] = field(default_factory=list)
-    preempted_by: List[str] = field(default_factory=list)
-    exceptions_ref: Optional[str] = None
-    defines_terms: List[str] = field(default_factory=list)
-
-
-class SlotExtractor:
-    """Helper utilities to extract candidate slots from raw legal/commercial text."""
-
-    @staticmethod
-    def extract_percentages(text: str) -> List[Tuple[float, str]]:
-        """Extracts percentages e.g. '50%', '33.0 percent' along with surrounding context."""
-        results = []
-        for match in re.finditer(r"(\d+(?:\.\d+)?)\s*(?:%|percent)", text, re.IGNORECASE):
-            val = float(match.group(1))
-            start = max(0, match.start() - 30)
-            end = min(len(text), match.end() + 30)
-            context = text[start:end].strip()
-            results.append((val, context))
-        return results
-
-    @staticmethod
-    def extract_day_windows(text: str) -> List[Tuple[int, str, str]]:
-        """Extracts day intervals e.g. '21 calendar days', '3 business days', '30 days'."""
-        results = []
-        pattern = r"(\d+)\s+(calendar|business|court)?\s*days?"
-        for match in re.finditer(pattern, text, re.IGNORECASE):
-            days = int(match.group(1))
-            day_type = (match.group(2) or "calendar").lower()
-            start = max(0, match.start() - 30)
-            end = min(len(text), match.end() + 30)
-            context = text[start:end].strip()
-            results.append((days, day_type, context))
-        return results
-
-    @staticmethod
-    def extract_month_windows(text: str) -> List[Tuple[int, str]]:
-        """Extracts month intervals e.g. '36 consecutive months', '12 months'."""
-        results = []
-        pattern = r"(\d+)\s+(?:consecutive\s+)?months?"
-        for match in re.finditer(pattern, text, re.IGNORECASE):
-            months = int(match.group(1))
-            start = max(0, match.start() - 30)
-            end = min(len(text), match.end() + 30)
-            context = text[start:end].strip()
-            results.append((months, context))
-        return results
-
-    @staticmethod
-    def extract_word_numerals(text: str) -> Dict[str, int]:
-        """Detects spelled-out numbers in text."""
-        found = {}
-        text_lower = text.lower()
-        for word, val in sorted(WORD_NUMERALS.items(), key=lambda x: len(x[0]), reverse=True):
-            if re.search(r"\b" + re.escape(word) + r"\b", text_lower):
-                found[word] = val
-        return found
+__all__ = [
+    "WORD_NUMERALS",
+    "ScaffoldingEntry",
+    "SlotExtractor",
+    "PackScaffolder",
+]
 
 
 class PackScaffolder:
@@ -386,9 +298,13 @@ class PackScaffolder:
         # Final schema check
         RagPackValidator.validate_dict(pack_dict, source_ref=output_path)
 
-        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
-        with open(output_path, "w", encoding="utf-8") as f:
-            yaml.dump(pack_dict, f, sort_keys=False, default_flow_style=False, allow_unicode=True)
+        try:
+            os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+            with open(output_path, "w", encoding="utf-8") as f:
+                yaml.dump(pack_dict, f, sort_keys=False, default_flow_style=False, allow_unicode=True)
+        except (OSError, yaml.YAMLError) as exc:
+            from .validator import PackWriteError
+            raise PackWriteError(f"Failed to write pack file {output_path}: {exc}", original_error=exc) from exc
 
         return os.path.abspath(output_path)
 

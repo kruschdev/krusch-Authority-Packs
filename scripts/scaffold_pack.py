@@ -10,12 +10,46 @@ Usage:
 
 import argparse
 import os
+import re
 import sys
 
 # Ensure project root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from src.scaffold import PackScaffolder, ScaffoldingEntry
+
+_NAME_RE = re.compile(r"^[A-Za-z\s.-]{1,100}$")
+_TEXT_FIELD_RE = re.compile(r"^[A-Za-z0-9\s.,/&()-]{1,160}$")
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_SECTION_RE = re.compile(r"^[A-Za-z0-9._-]{1,40}$")
+
+
+def _validate_name(val: str) -> str:
+    cleaned = val.strip() if isinstance(val, str) else ""
+    if not cleaned or not _NAME_RE.fullmatch(cleaned):
+        raise argparse.ArgumentTypeError(f"Invalid name: {val!r}")
+    return cleaned
+
+
+def _validate_text_field(val: str) -> str:
+    cleaned = val.strip() if isinstance(val, str) else ""
+    if not cleaned or not _TEXT_FIELD_RE.fullmatch(cleaned):
+        raise argparse.ArgumentTypeError(f"Invalid metadata field: {val!r}")
+    return cleaned
+
+
+def _validate_effective_date(val: str) -> str:
+    cleaned = val.strip() if isinstance(val, str) else ""
+    if not _DATE_RE.fullmatch(cleaned):
+        raise argparse.ArgumentTypeError(f"Invalid date (expected YYYY-MM-DD): {val!r}")
+    return cleaned
+
+
+def _validate_section_number(val: str) -> str:
+    cleaned = val.strip() if isinstance(val, str) else ""
+    if not cleaned or not _SECTION_RE.fullmatch(cleaned):
+        raise argparse.ArgumentTypeError(f"Invalid section number: {val!r}")
+    return cleaned
 
 
 def main():
@@ -36,35 +70,35 @@ def main():
     )
     parser.add_argument(
         "--municipality",
-        type=str,
-        help="Name of municipality (e.g. Berkeley, Santa Monica, San Jose)",
+        type=_validate_name,
+        help="Name of municipality (letters, spaces, hyphens, periods; e.g. Berkeley, Santa Monica, San Jose)",
     )
     parser.add_argument(
         "--county",
-        type=str,
+        type=_validate_name,
         default="County",
-        help="County name (e.g. Alameda County, Los Angeles County)",
+        help="County name (letters, spaces, hyphens, periods; e.g. Alameda County, Los Angeles County)",
     )
     parser.add_argument(
         "--code-name",
-        type=str,
-        help="Municipal code family name (e.g. Berkeley Municipal Code, Santa Monica Municipal Code)",
+        type=_validate_text_field,
+        help="Municipal code family name (alphanumeric/punctuation; e.g. Berkeley Municipal Code)",
     )
     parser.add_argument(
         "--edition",
-        type=str,
+        type=_validate_text_field,
         default="Current Enacted Edition",
-        help="Legislative edition or supplement citation",
+        help="Legislative edition or supplement citation (safe alphanumeric/citation characters)",
     )
     parser.add_argument(
         "--publisher",
-        type=str,
+        type=_validate_text_field,
         default="Local Government & State Legislature",
-        help="Official publisher of the source codes",
+        help="Official publisher of the source codes (safe alphanumeric/citation characters)",
     )
     parser.add_argument(
         "--effective-from",
-        type=str,
+        type=_validate_effective_date,
         default="2024-01-01",
         help="Effective date of the pack edition (YYYY-MM-DD)",
     )
@@ -94,7 +128,7 @@ def main():
     )
     parser.add_argument(
         "--section-number",
-        type=str,
+        type=_validate_section_number,
         default=None,
         help="Section number for the municipal ordinance (e.g. 1806, 17.24.010)",
     )

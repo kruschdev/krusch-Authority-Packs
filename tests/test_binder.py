@@ -151,5 +151,44 @@ def test_cross_domain_binding_and_intent(binder):
     assert intent_corp["choice"] == "CORPORATE_GOVERNANCE"
 
 
+def test_pack_binder_regex_redos_benchmark(binder):
+    import re
+    import time
 
+    # Ensure no unbounded quantifiers remain in pattern definitions
+    all_raw_patterns = (
+        [p for pats in PackBinder.MUNICIPALITY_PATTERNS.values() for p in pats]
+        + [p for pats in PackBinder.DOMAIN_PATTERNS.values() for p in pats]
+        + list(PackBinder.DATE_PATTERNS)
+    )
+    for raw in all_raw_patterns:
+        assert r"\w*" not in raw
+        assert r"\s*" not in raw
+        assert r"[A-Za-z]+" not in raw
 
+    # Generate worst-case 8KB adversarial inputs targeting near-miss prefixes
+    adversarial_inputs = [
+        "determinate sentenc" + ("x" * 8192) + "!",
+        "effective " + ("January " * 1024) + "!",
+        "clause " + (" " * 4096) + ("9" * 4096) + "!",
+        "asc" + (" " * 8192) + "999",
+    ]
+
+    compiled_all = (
+        [p for pats in PackBinder.COMPILED_MUNICIPALITY_PATTERNS.values() for p in pats]
+        + [p for pats in PackBinder.COMPILED_DOMAIN_PATTERNS.values() for p in pats]
+        + list(PackBinder.COMPILED_DATE_PATTERNS)
+    )
+
+    for adv in adversarial_inputs:
+        start_ns = time.perf_counter_ns()
+        for pat in compiled_all:
+            PackBinder._safe_regex_search(pat, adv)
+        elapsed_ms = (time.perf_counter_ns() - start_ns) / 1_000_000.0
+        assert elapsed_ms < 100.0, f"Adversarial regex sweep took {elapsed_ms:.2f}ms (> 100ms ceiling)"
+
+        t0 = time.perf_counter_ns()
+        binder.extract_entities(adv)
+        binder.classify_query_intent(adv)
+        op_ms = (time.perf_counter_ns() - t0) / 1_000_000.0
+        assert op_ms < 100.0, f"Binder entity/intent extraction took {op_ms:.2f}ms (> 100ms ceiling)"

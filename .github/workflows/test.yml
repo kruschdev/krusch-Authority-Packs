@@ -55,6 +55,8 @@ jobs:
 
     - name: Notify on Failure
       if: failure()
+      env:
+        NTFY_TOPIC_URL: ${{ secrets.NTFY_TOPIC_URL }}
       run: |
         TAIL_LOG=$(tail -n 25 test.log 2>/dev/null || echo "No test log available")
         curl -s \
@@ -62,4 +64,4 @@ jobs:
           -H "Priority: urgent" \
           -H "Tags: warning,github-actions" \
           -d "$TAIL_LOG" \
-          https://ntfy.sh/krusch-ci-alerts
+          "${NTFY_TOPIC_URL:-}" || true

@@ -12,9 +12,11 @@ from __future__ import annotations
 import os
 import re
 import sys
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+import time
+from typing import Any, Dict, List, Optional, Pattern, Tuple, Union
 
 # Ensure monorepo lib-py is discoverable when running inside homelab
 _MONOREPO_LIB_PY = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "lib-py"))
@@ -54,22 +56,46 @@ class PackBindingResult:
 
 
 class PackRegistry:
-    """In-memory catalog of available RAG packs with metadata and temporal bounds."""
+    """In-memory catalog of available RAG packs with metadata and temporal bounds.
 
-    def __init__(self):
+    Used by PackBinder and test suites to index packs by `pack_id` and enumerate
+    candidate packs during deterministic jurisdiction/domain binding.
+    Thread-safe via re-entrant lock (`self._lock`).
+    """
+
+    def __init__(self, initial_packs: Optional[Any] = None):
+        self._lock = threading.RLock()
         self._packs: Dict[str, Dict[str, Any]] = {}
+        with self._lock:
+            if isinstance(initial_packs, dict):
+                for k, v in initial_packs.items():
+                    if isinstance(v, dict):
+                        self._packs[str(v.get("pack_id") or k)] = v
+            elif isinstance(initial_packs, list):
+                for item in initial_packs:
+                    if isinstance(item, dict):
+                        self.register(item)
+
+    @classmethod
+    def from_catalog(cls, catalog: Any) -> "PackRegistry":
+        if isinstance(catalog, cls):
+            return catalog
+        return cls(initial_packs=catalog)
 
     def register(self, pack_dict: Dict[str, Any]) -> None:
         pack_id = pack_dict.get("pack_id")
         if not pack_id:
             raise ValueError("Pack missing pack_id")
-        self._packs[pack_id] = pack_dict
+        with self._lock:
+            self._packs[pack_id] = pack_dict
 
     def get(self, pack_id: str) -> Optional[Dict[str, Any]]:
-        return self._packs.get(pack_id)
+        with self._lock:
+            return self._packs.get(pack_id)
 
     def all_packs(self) -> List[Dict[str, Any]]:
-        return list(self._packs.values())
+        with self._lock:
+            return list(self._packs.values())
 
 
 class PackBinder:
@@ -77,6 +103,9 @@ class PackBinder:
     Extracts jurisdiction and temporal entities, verifies against the registry,
     and returns a deterministic binding or an explicit refusal.
     """
+
+    MAX_REGEX_INPUT_CHARS = 8192
+    MAX_REGEX_TIMEOUT_MS = 100.0
 
     MUNICIPALITY_PATTERNS = {
         "Oakland": [r"\boakland\b", r"\balameda county\b", r"\bomc\b", r"\bmeasure ee\b"],
@@ -88,16 +117,16 @@ class PackBinder:
     }
 
     DOMAIN_PATTERNS = {
-        "Financial Accounting & Revenue Recognition": [r"\basc\s*606\b", r"\basc\s*842\b", r"\brevenue recognition\b", r"\bgaap\b", r"\bperformance obligations?\b"],
+        "Financial Accounting & Revenue Recognition": [r"\basc\s{0,5}606\b", r"\basc\s{0,5}842\b", r"\brevenue recognition\b", r"\bgaap\b", r"\bperformance obligations?\b"],
         "Commercial SaaS & Enterprise Licensing": [r"\bsaas\b", r"\bsla uptime\b", r"\bmaster services agreement\b", r"\bmsa\b", r"\blimitation of liability\b"],
         "Vendor Procurement & Master Services Agreements": [
             r"\bprocurement\b", r"\bvendor agreement\b", r"\bnet[\s-]30\b", r"\bdeliverables?\b",
-            r"\bclause\s*\d+\b", r"\bpenalty\b"
+            r"\bclause\s{0,5}\d{1,6}\b", r"\bpenalty\b"
         ],
         "Criminal Law & Constitutional Procedure": [
             r"\bpenal code\b", r"\bsearch and seizure\b", r"\bsuppress(?:ion)?\b", r"\b1538\.5\b",
             r"\b995\b", r"\bhumphrey\b", r"\bbail\b", r"\bmiranda\b", r"\barrest\b",
-            r"\bdeterminate sentenc\w*\b", r"\btriad\b", r"\bbrady\b", r"\bfactual innocence\b"
+            r"\bdeterminate sentenc(?:e|es|ing)\b", r"\btriad\b", r"\bbrady\b", r"\bfactual innocence\b"
         ],
         "California Commercial & Business Law": [
             r"\bnon-?compete\b", r"\b16600\b", r"\b1668\b", r"\b1717\b", r"\bexculpatory\b",
@@ -136,8 +165,22 @@ class PackBinder:
 
     DATE_PATTERNS = [
         r"\b(20\d{2}-\d{2}-\d{2})\b",
-        r"\b(?:as of|effective|dated)\s+([A-Za-z]+ \d{1,2},? \d{4})\b",
-        r"\b(?:in|during|year)\s+(20\d{2})\b",
+        r"\b(?:as of|effective|dated)\s{1,5}([A-Za-z]{3,12}\s{1,3}\d{1,2},?\s{1,3}\d{4})\b",
+        r"\b(?:in|during|year)\s{1,5}(20\d{2})\b",
+    ]
+
+    COMPILED_MUNICIPALITY_PATTERNS: Dict[str, List[Pattern[str]]] = {
+        muni: [re.compile(p) for p in pats]
+        for muni, pats in MUNICIPALITY_PATTERNS.items()
+    }
+
+    COMPILED_DOMAIN_PATTERNS: Dict[str, List[Pattern[str]]] = {
+        domain: [re.compile(p) for p in pats]
+        for domain, pats in DOMAIN_PATTERNS.items()
+    }
+
+    COMPILED_DATE_PATTERNS: List[Pattern[str]] = [
+        re.compile(p, re.IGNORECASE) for p in DATE_PATTERNS
     ]
 
     INTENT_TO_DOMAIN = {
@@ -153,16 +196,37 @@ class PackBinder:
         "CORPORATE_GOVERNANCE": "California Corporate Governance & Securities Law",
     }
 
-    def __init__(self, registry: PackRegistry, decider: Optional[Any] = None):
-        self.registry = registry
-        self.decider = decider or (System1Decider(deterministic=True) if System1Decider else None)
+    def __init__(self, registry: Any, decider: Optional[Any] = None):
+        self.registry = PackRegistry.from_catalog(registry)
+        self.decider = decider or (System1Decider(fallback=True) if System1Decider else None)
+
+    @classmethod
+    def _safe_regex_search(
+        cls,
+        pattern: Union[str, Pattern[str]],
+        text: str,
+        flags: int = 0,
+        max_chars: int = MAX_REGEX_INPUT_CHARS,
+        timeout_ms: float = MAX_REGEX_TIMEOUT_MS,
+    ) -> Optional[re.Match[str]]:
+        """Execute a bounded-input regex search and enforce an execution-time ceiling."""
+        bounded_text = text[:max_chars] if len(text) > max_chars else text
+        start_ns = time.perf_counter_ns()
+        if isinstance(pattern, re.Pattern):
+            match = pattern.search(bounded_text)
+        else:
+            match = re.search(pattern, bounded_text, flags)
+        elapsed_ms = (time.perf_counter_ns() - start_ns) / 1_000_000.0
+        if elapsed_ms > timeout_ms:
+            raise TimeoutError(f"Regex evaluation exceeded {timeout_ms:.1f}ms ceiling ({elapsed_ms:.2f}ms)")
+        return match
 
     def classify_query_intent(self, query: str, use_system1_llm: bool = False) -> Dict[str, Any]:
         """
         Classify query into canonical domain intents using deterministic regex gates
         or Sovereign System 1 single-token logprob marginalization.
         """
-        text_lower = query.lower()
+        text_lower = query[: self.MAX_REGEX_INPUT_CHARS].lower()
         choices = [
             "TENANCY",
             "FINANCIAL_ACCOUNTING",
@@ -182,13 +246,13 @@ class PackBinder:
         if any(k in text_lower for k in ["evict", "rent", "tenant", "security deposit", "landlord", "lease", "habitability", "move-in", "move in"]):
             return {"choice": "TENANCY", "confidence": 0.96, "mode": "deterministic_gate"}
         for intent_key, domain_name in self.INTENT_TO_DOMAIN.items():
-            patterns = self.DOMAIN_PATTERNS.get(domain_name, [])
-            if any(re.search(p, text_lower) for p in patterns):
+            patterns = self.COMPILED_DOMAIN_PATTERNS.get(domain_name, [])
+            if any(self._safe_regex_search(p, text_lower) for p in patterns):
                 return {"choice": intent_key, "confidence": 0.94, "mode": "deterministic_gate"}
 
         if self.decider is not None:
             decider_instance = (
-                System1Decider(deterministic=False) if (use_system1_llm and System1Decider) else self.decider
+                System1Decider(fallback=False) if (use_system1_llm and System1Decider) else self.decider
             )
             res = decider_instance.decide(
                 state=f"User Legal/Compliance Query: {query}",
@@ -248,12 +312,12 @@ class PackBinder:
             entities.domain = context["domain"]
 
         # 2. Extract municipality if not in context
-        text_lower = query.lower()
+        text_lower = query[: self.MAX_REGEX_INPUT_CHARS].lower()
         matched_munis: List[Tuple[str, float]] = []
 
-        for muni, patterns in self.MUNICIPALITY_PATTERNS.items():
+        for muni, patterns in self.COMPILED_MUNICIPALITY_PATTERNS.items():
             for p in patterns:
-                if re.search(p, text_lower):
+                if self._safe_regex_search(p, text_lower):
                     matched_munis.append((muni, 0.9))
                     break
 
@@ -267,17 +331,17 @@ class PackBinder:
             entities.municipality = None  # Force refusal due to multi-city conflict
         else:
             # Check domain patterns
-            for domain, patterns in self.DOMAIN_PATTERNS.items():
+            for domain, patterns in self.COMPILED_DOMAIN_PATTERNS.items():
                 for p in patterns:
-                    if re.search(p, text_lower):
+                    if self._safe_regex_search(p, text_lower):
                         entities.domain = domain
                         entities.confidence = 0.90
                         break
 
         # 3. Extract as-of date
         if not entities.as_of_date:
-            for dp in self.DATE_PATTERNS:
-                m = re.search(dp, query, re.IGNORECASE)
+            for dp in self.COMPILED_DATE_PATTERNS:
+                m = self._safe_regex_search(dp, query)
                 if m:
                     raw_date = m.group(1)
                     parsed = self._normalize_date(raw_date)
@@ -295,8 +359,12 @@ class PackBinder:
         entities = self.extract_entities(query, context)
 
         # 1. Check for ambiguous cross-city queries
-        text_lower = query.lower()
-        active_cities = [m for m, pats in self.MUNICIPALITY_PATTERNS.items() if any(re.search(p, text_lower) for p in pats)]
+        text_lower = query[: self.MAX_REGEX_INPUT_CHARS].lower()
+        active_cities = [
+            m
+            for m, pats in self.COMPILED_MUNICIPALITY_PATTERNS.items()
+            if any(self._safe_regex_search(p, text_lower) for p in pats)
+        ]
         if len(active_cities) > 1:
             return PackBindingResult(
                 status="REFUSED_AMBIGUOUS",

@@ -117,3 +117,58 @@ def test_pack_scaffolder_disk_write_and_reload():
         assert len(bench_queries) == 3
         assert bench_queries[0]["expected_jurisdiction"] == "Santa Monica"
         assert bench_queries[2]["should_refuse"] is True
+
+
+def test_package_all_is_immutable_tuple_and_pack_registry_thread_safety():
+    import argparse
+    import threading
+    import src
+    from src.binder import PackRegistry
+    from scripts.scaffold_pack import (
+        _validate_name,
+        _validate_text_field,
+        _validate_effective_date,
+        _validate_section_number,
+    )
+
+    # BUG-01: __all__ must be an immutable tuple
+    assert isinstance(src.__all__, tuple)
+    assert src.__all__ == ("RagPack", "RagPackValidator", "ValidationError")
+
+    # SEC-01: CLI argument validators
+    assert _validate_name("Berkeley") == "Berkeley"
+    assert _validate_name("Alameda County") == "Alameda County"
+    with pytest.raises(argparse.ArgumentTypeError):
+        _validate_name("Berkeley; rm -rf /")
+
+    assert _validate_text_field("BMC Title 13 / Measure MM") == "BMC Title 13 / Measure MM"
+    with pytest.raises(argparse.ArgumentTypeError):
+        _validate_text_field("Bad$Shell`Cmd`")
+
+    assert _validate_effective_date("2024-01-01") == "2024-01-01"
+    with pytest.raises(argparse.ArgumentTypeError):
+        _validate_effective_date("2024/01/01")
+
+    assert _validate_section_number("13.76.130") == "13.76.130"
+    with pytest.raises(argparse.ArgumentTypeError):
+        _validate_section_number("13;drop")
+
+    # ARCH-01: PackRegistry concurrent thread-safety
+    reg = PackRegistry()
+    assert hasattr(reg, "_lock")
+
+    def worker(idx: int):
+        for j in range(10):
+            pid = f"pack_{idx}_{j}"
+            reg.register({"pack_id": pid, "municipality": "Berkeley"})
+            assert reg.get(pid) is not None
+            _ = reg.all_packs()
+
+    threads = [threading.Thread(target=worker, args=(i,)) for i in range(6)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert len(reg.all_packs()) == 60
+
