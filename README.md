@@ -20,10 +20,10 @@
 In enterprise procurement and regulated industries, you do not sell "RAG." Buyers do not buy retrieval mechanisms, sliding windows, or vector similarity. **Buyers purchase a bounded, versioned rulebook the AI system is legally permitted to use.**
 
 ### The Buyer Sentence
-> *“Your model only sees the Oakland 2024 ordinance, the numeric caps we extracted, and the statutes that override it. If the question is outside the pack, it refuses.”*
+> *“Your model only sees the Oakland 2024 ordinance, the numeric caps I extracted, and the statutes that override it. If the question is outside the pack, it refuses.”*
 
 ### One-Line Positioning
-> **“We don’t search the internet for the law. We ship the pack that is the law for that city, that year.”**
+> **“I don’t search the internet for the law. I ship the pack that is the law for that city, that year.”**
 
 ---
 
@@ -35,8 +35,8 @@ Internally, developers call these structures *RAG Packs* because they package kn
 |---|---|---|
 | **Jurisdiction Pack**<br>`(Legal Vertical)` | “LA rent / Oakland just cause / SF OMI rulebook” | YAML specification + typed slots + preemption DAG + physical PDF citation coordinates + `as_of` temporal gate. |
 | **Standards Pack**<br>`(Finance & Audit)` | “US GAAP ASC 606 revenue recognition pack” | Five-step deterministic contract checklist + numeric financing thresholds + distinctness criteria + out-of-scope refusal contract. |
-| **Playbook Pack**<br>`(Enterprise Contracts)` | “Our corporate MSA / procurement policy” | Company clauses and authorized deviation bounds joined directly against statutory floors and ceiling packs. |
-| **Pack Subscription**<br>`(Recurring SaaS)` | “Keep our AI current when the city council amends” | Continuous legislative monitoring, version bumps, amendment diffs, and updated effective-date graphs. **Sell the subscription to currency, not the static file.** |
+| **Playbook Pack**<br>`(Enterprise Contracts)` | “Corporate MSA / enterprise procurement policy” | Company clauses and authorized deviation bounds joined directly against statutory floors and ceiling packs. |
+| **Pack Subscription**<br>`(Recurring SaaS)` | “Keep the AI current when the city council amends” | Continuous legislative monitoring, version bumps, amendment diffs, and updated effective-date graphs. **Sell the subscription to currency, not the static file.** |
 | **Pack Audit**<br>`(Assurance & Defense)` | “Prove this AI advice came from the gazette” | Sub-line cell bounding box report (`[x0, y0, x1, y1]`), verbatim quote matches, and automated 180-query verification matrix. |
 
 ### Pitch Vocabulary Guide
@@ -73,7 +73,7 @@ The output reads with authoritative elegance, but it is legally toxic and guaran
 
 ## 🔬 Separating Determinism from Probabilistic Generation
 
-We explicitly separate three layers of the software stack:
+I explicitly separate three layers of the software stack:
 
 1. **Deterministic Binding (Exact):** Which pack, which enacted edition, which verified as-of date (or explicit refusal).
 2. **Deterministic Slots & Preemption Operators (Exact):** Typed constants (`33.0`, `21 days`, `3 business days`), physical source bboxes, verbatim quoted sentences, and compiled preemption graphs.
@@ -131,7 +131,7 @@ Statutory preemption is modeled as a compiled directed graph using explicit oper
 
 ## 📊 Binder Conformance Suite: Gate Verification (N = 180)
 
-Self-authored unit tests are essential regression guards, but they test code execution paths rather than gate boundary behavior under adversarial input. To measure the real-world boundary enforcement of Authority Packs against vector bleed, we benchmarked 180 standardized challenge queries across five distinct challenge classes (`src/eval.py`):
+Self-authored unit tests are essential regression guards, but they test code execution paths rather than gate boundary behavior under adversarial input. To measure the real-world boundary enforcement of Authority Packs against vector bleed, I benchmarked 180 standardized challenge queries across five distinct challenge classes (`src/eval.py`):
 
 *Note on evaluation methodology:* This benchmark evaluates **deterministic gate conformance**—measuring whether the Pack Binder correctly routes, bounds, extracts physical slots, or fails closed on ambiguous, cross-jurisdiction, or stale queries before any text generation occurs. It measures boundary and gate enforcement, contrasting directly with unconstrained naive cosine vector RAG.
 
