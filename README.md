@@ -169,6 +169,14 @@ Authority Packs follow a disciplined human-in-the-loop engineering pipeline:
 
 ## 🚀 CLI Usage & Quickstart
 
+### Agent-Assisted Setup
+
+Ask your coding agent (Claude Code, Codex, Cursor, Windsurf, or Antigravity):
+
+```text
+Read https://raw.githubusercontent.com/kruschdev/krusch-Authority-Packs/main/INSTALL.md and set up krusch-Authority-Packs on this machine.
+```
+
 ### Installation
 ```bash
 git clone https://github.com/kruschdev/krusch-Authority-Packs.git
